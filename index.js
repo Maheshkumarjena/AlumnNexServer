@@ -3,11 +3,12 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import userRouter from './api/routes/user.route.js';
 import authRouter from './api/routes/auth.route.js';
+import cors from 'cors';
 
 dotenv.config({ path: './.env.local' });
 // Initialize the Express application
 const app = express();
-
+app.use(cors({  origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json());
 
 
