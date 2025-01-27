@@ -17,6 +17,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  dob: {
+    type: Date,
+    required: true,
+  },
+  almaMater: {
+    type: String,
+  },
+  lastYearOfEducation:{
+    type:Date
+  },
+  accountType: {
+    type: String,
+    required: true,
+  },
+  
+  
+
 },
 {
   timestamps: true,
