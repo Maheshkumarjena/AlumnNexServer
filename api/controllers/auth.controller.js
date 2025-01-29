@@ -37,9 +37,8 @@ export const signup = async (req, res, next) => {
 };
 
 export const signin = async (req, res, next) => {
-
     const { email, password } = req.body;
-    console.log("data form frontend ", req.body)
+    console.log("data from frontend:", req.body);
 
     try {
         // Check if the user exists
@@ -60,13 +59,24 @@ export const signin = async (req, res, next) => {
             process.env.JWT_SECRET, // Replace with your secret key
             { expiresIn: '1h' } // Token expiration time
         );
+        console.log('Environment:', process.env.NODE_ENV);
 
         res.cookie('token', token, {
             httpOnly: true, // Prevent client-side access to the cookie
-            secure: process.env.JWT_SECRET === 'production', // Use secure cookies in production
+            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
             sameSite: 'Strict', // Prevent CSRF attacks
             maxAge: 3600000, // 1 hour in milliseconds
-        }).status(200).json({ message: 'Sign In successful', user: { id: existingUser._id, email: existingUser.email, username: existingUser.username , userType:existingUser.accountType , dob:existingUser.dob , almaMater:existingUser.almaMater  } });
+        }).status(200).json({ 
+            message: 'Sign In successful', 
+            user: { 
+                id: existingUser._id, 
+                email: existingUser.email, 
+                username: existingUser.username,
+                userType: existingUser.accountType,
+                dob: existingUser.dob,
+                almaMater: existingUser.almaMater 
+            } 
+        });
         // Respond with the token and user details
 
     } catch (error) {
@@ -77,17 +87,21 @@ export const signin = async (req, res, next) => {
 
 
 
-const authenticate = (req, res, next) => {
+export const authenticate = (req, res, next) => {
+    console.log(req.body)
     const token = req.cookies.token; // Get token from cookies
-
+    console.log('inside authenticate')
     if (!token) return res.status(401).json({ message: 'Unauthorized: No token provided' });
-
+    
     try {
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded; // Attach user info to the request object
         next(); // Proceed to the next middleware or route handler
+        console.log('token authorized')
     } catch (error) {
         res.status(403).json({ message: 'Unauthorized: Invalid token' });
+        console.log('token not authorized')
+
     }
 };

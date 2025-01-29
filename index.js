@@ -4,16 +4,15 @@ import dotenv from 'dotenv';
 import userRouter from './api/routes/user.route.js';
 import authRouter from './api/routes/auth.route.js';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 dotenv.config({ path: './.env.local' });
 // Initialize the Express application
 const app = express();
+app.use(express.json());
 app.use(cors({  origin: 'http://localhost:3000', credentials: true }));
-app.use(express.json());
+app.use(cookieParser())
 
-
-// Middleware to parse JSON requests
-app.use(express.json());
 
 // MongoDB connection string
 const MONGO_URI = process.env.MONGO_URI ;
@@ -34,9 +33,15 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
+app.use((req, res, next) => {
+    console.log('Cookies:', req.cookies);
+    next();
+});
+
 
 app.use('/api/users', userRouter);
 app.use('/api/auth', authRouter);
+
 
 
 
