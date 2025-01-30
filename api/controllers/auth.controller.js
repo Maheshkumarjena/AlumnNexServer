@@ -66,16 +66,16 @@ export const signin = async (req, res, next) => {
             secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
             sameSite: 'Strict', // Prevent CSRF attacks
             maxAge: 3600000, // 1 hour in milliseconds
-        }).status(200).json({ 
-            message: 'Sign In successful', 
-            user: { 
-                id: existingUser._id, 
-                email: existingUser.email, 
+        }).status(200).json({
+            message: 'Sign In successful',
+            user: {
+                id: existingUser._id,
+                email: existingUser.email,
                 username: existingUser.username,
                 userType: existingUser.accountType,
                 dob: existingUser.dob,
-                almaMater: existingUser.almaMater 
-            } 
+                almaMater: existingUser.almaMater
+            }
         });
         // Respond with the token and user details
 
@@ -85,14 +85,12 @@ export const signin = async (req, res, next) => {
     }
 };
 
-
-
 export const authenticate = (req, res, next) => {
     console.log(req.body)
     const token = req.cookies.token; // Get token from cookies
     console.log('inside authenticate')
     if (!token) return res.status(401).json({ message: 'Unauthorized: No token provided' });
-    
+
     try {
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -103,5 +101,46 @@ export const authenticate = (req, res, next) => {
         res.status(403).json({ message: 'Unauthorized: Invalid token' });
         console.log('token not authorized')
 
+    }
+};
+
+export const google = async (req, res, next) => {
+    console.log("google login data", req.body);
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        if (user) {
+            const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const { password: hashedPassword, ...rest } = user.toObject();
+            const expiresIn = Date.now() + 3600000;
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'Strict',
+                maxAge: 3600000,
+            }).status(200).json({ message: 'Sign In successful', user: rest, expiresIn });
+        } else {
+            const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            const hashPassword = bcryptjs.hashSync(generatedPassword, 10);
+            const newUser = new User({
+                username: req.body.username,
+                email: req.body.email,
+                password: hashPassword,
+                accountType: req.body.accountType,
+                profilePicture: req.body.photoURL,
+            });
+            await newUser.save();
+            const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const { username, email, accountType, profilePicture } = newUser.toObject();
+            const expiresIn = Date.now() + 3600000;
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'Strict',
+                maxAge: 3600000,
+            }).status(200).json({ message: 'Sign In successful', user: { username, email, accountType, profilePicture }, expiresIn });
+        }
+    } catch (error) {
+        next(error);
+        console.log("backend error");
     }
 };

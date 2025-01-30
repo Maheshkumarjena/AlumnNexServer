@@ -19,7 +19,6 @@ const userSchema = new mongoose.Schema({
   },
   dob: {
     type: Date,
-    required: true,
   },
   almaMater: {
     type: String,
@@ -30,6 +29,10 @@ const userSchema = new mongoose.Schema({
   accountType: {
     type: String,
     required: true,
+  },
+  profilePicture: {
+    type: String,
+    default:"https://th.bing.com/th/id/OIP.GqGVPkLpUlSo5SmeDogUdwHaHa?w=194&h=194&c=7&r=0&o=5&dpr=2&pid=1.7"
   },
   
   
