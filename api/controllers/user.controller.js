@@ -3,7 +3,7 @@ import { errorHandler } from "../utils/error.js";
 import { authenticate } from "./auth.controller.js";
 
 export const getProfile = [authenticate, async (req, res) => {
-    console.log(req.cookies);
+    console.log(req.cookies); 
     console.log("get profile");
     
     try {

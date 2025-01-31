@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import userRouter from './api/routes/user.route.js';
 import authRouter from './api/routes/auth.route.js';
+import postRouter from './api/routes/post.route.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
@@ -41,7 +42,7 @@ app.use((req, res, next) => {
 
 app.use('/api/users', userRouter);
 app.use('/api/auth', authRouter);
-
+app.use('/api/posts', postRouter);
 
 
 
