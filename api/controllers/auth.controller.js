@@ -119,25 +119,35 @@ export const google = async (req, res, next) => {
                 maxAge: 3600000,
             }).status(200).json({ message: 'Sign In successful', user: rest, expiresIn });
         } else {
+            console.log("enters else block")
             const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
-            const hashPassword = bcryptjs.hashSync(generatedPassword, 10);
+            console.log('generatedPassword:', generatedPassword);
+
+            const hashedpassword = bcryptjs.hashSync(generatedPassword, 10);
+            console.log("hashedpassword", hashedpassword);
+
+            const generatedUsername = req.body.username.split(" ").join("").toLowerCase() + Math.floor(Math.random() * 10000);
+            console.log(generatedUsername);
+
+
             const newUser = new User({
-                username: req.body.username,
+                username: generatedUsername,
                 email: req.body.email,
-                password: hashPassword,
+                password: hashedpassword,
                 accountType: req.body.accountType,
                 profilePicture: req.body.photoURL,
             });
+            console.log("new user", newUser);
             await newUser.save();
             const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-            const { username, email, accountType, profilePicture } = newUser.toObject();
+            // const { username, email, accountType, profilePicture } = newUser.toObject();
             const expiresIn = Date.now() + 3600000;
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'Strict',
                 maxAge: 3600000,
-            }).status(200).json({ message: 'Sign In successful', user: { username, email, accountType, profilePicture }, expiresIn });
+            }).status(200).json({ message: 'Sign In successful', user: { username: newUser.username, email: newUser.email, accountType: newUser.accountType, profilePicture: newUser.profilePicture }, expiresIn });
         }
     } catch (error) {
         next(error);
