@@ -31,6 +31,9 @@ const cleanupFiles = (files) => {
   });
 };
 
+
+// Create a new post
+
 export const post = [
   authenticate,
   upload.array('files', 10),
@@ -92,3 +95,29 @@ export const post = [
     }
   }
 ];
+
+
+// Get all posts for a user
+
+export const getPosts = [authenticate, async (req, res) => {
+  console.log(req.body)
+  const { _id: userId } = req.body;
+
+  try {
+    const posts = await Post.find({ userId }).sort({ createdAt: -1 });
+
+    res.status(200).send({
+      success: true,
+      message: "Posts retrieved successfully",
+      data: posts,
+    });
+    console.log('post retrived and sent to client')
+  } catch (error) {
+    console.error("Error retrieving posts:", error);
+    res.status(400).send({
+      success: false,
+      message: "Failed to retrieve posts",
+      error: error.message,
+    });
+  }
+}];
