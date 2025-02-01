@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs'; 
+import path from 'path';
 
     // Configuration
 
@@ -17,10 +18,11 @@ export const uploadToCloudinary = async (localFilePath) => {
             throw new Error('File path is required');
         }
 
+        const fileName = path.basename(localFilePath, path.extname(localFilePath));
         // Upload a file to Cloudinary
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: 'auto',
-            public_id: 'sample_image',
+            public_id: `alumnnex/${fileName}`, // Uploads the file with a custom public ID
         });
 
         console.log("Uploaded URL:", response.url);

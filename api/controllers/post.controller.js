@@ -7,8 +7,6 @@ import path from 'path';
 import mongoose from 'mongoose'; // Import mongoose for ObjectId
 
 // Ensure the uploads directory exists
-const uploadDir = path.join(process.cwd(), 'uploads');
-fs.mkdirSync(uploadDir, { recursive: true });
 
 const uploadFiles = async (files) => {
   try {
@@ -83,6 +81,7 @@ export const post = [
         message: "Post created successfully",
         data: post,
       });
+      console.log('post created successfully')
     } catch (error) {
       console.error("Error creating post:", error);
       res.status(400).send({
