@@ -1,6 +1,6 @@
 import User from "../../models/User.js";
 import { errorHandler } from "../utils/error.js";
-import { authenticate } from "./auth.controller.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
 
 export const getProfile = [authenticate, async (req, res) => {
     console.log(req.cookies); 

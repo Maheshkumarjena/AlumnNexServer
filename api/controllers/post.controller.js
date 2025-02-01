@@ -1,28 +1,95 @@
 import Post from '../../models/Post.js';
-import { authenticate } from './auth.controller.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { upload } from '../../middleware/multer.middleware.js';
+import uploadToCloudinary from '../utils/cloudinary.js';
+import fs from 'fs';
+import path from 'path';
+import mongoose from 'mongoose'; // Import mongoose for ObjectId
 
-export const post =[authenticate, async (req, res) => {
-    console.log('request . body at post route', req.body.media[0]);
-    const content = req.body.content;
-    const media = req.body.media[0];
-    const id=req.body._id;
-    console.log("id",id);
-    try {
-      const post = new Post({
-        userId: id,
-        content:content,
-        media:media,
-      });
-  
-      await post.save();
-  
-      // Optionally, you can also push the post to the user's posts array if you have such a field
-      // const user = await User.findById(req.user._id);
-      // user.posts.push(post._id);
-      // await user.save();
-  
-      res.status(201).send(post);
-    } catch (error) {
-      res.status(400).send(error);
+// Ensure the uploads directory exists
+const uploadDir = path.join(process.cwd(), 'uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
+
+const uploadFiles = async (files) => {
+  try {
+    const uploadPromises = files.map(file => {
+      if (!fs.existsSync(file.path)) {
+        throw new Error(`File not found: ${file.path}`);
+      }
+      return uploadToCloudinary(file.path);
+    });
+    return await Promise.all(uploadPromises);
+  } catch (error) {
+    console.error("Error uploading files to Cloudinary:", error);
+    throw new Error("Failed to upload files to Cloudinary");
+  }
+};
+
+const cleanupFiles = (files) => {
+  files.forEach(file => {
+    if (fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path); // Delete the file
     }
-  }];
+  });
+};
+
+export const post = [
+  authenticate,
+  upload.array('files', 10),
+  async (req, res) => {
+    console.log('Request body at post route:', req.body);
+    console.log('Uploaded files:', req.files);
+
+    const { content, _id: id } = req.body;
+
+    // Validate request body
+    if (!content || !id) {
+      return res.status(400).send({
+        success: false,
+        message: "Content and user ID are required",
+      });
+    }
+
+    try {
+      // Upload files to Cloudinary (if any)
+      let mediaUrls = [];
+      const files = req.files;
+
+      if (files && files.length > 0) {
+        console.log('Files to upload:', files);
+        mediaUrls = await uploadFiles(files);
+        console.log('Media URLs from Cloudinary:', mediaUrls);
+        cleanupFiles(files); // Clean up temporary files
+      }
+
+      // Log the data being saved
+      console.log('Data to save:', {
+        userId: id,
+        content,
+        media: mediaUrls,
+      });
+
+      // Create a new post
+      const post = new Post({
+        userId: new mongoose.Types.ObjectId(id), // Convert string to ObjectId
+        content,
+        media: mediaUrls,
+      });
+
+      await post.save();
+
+      res.status(201).send({
+        success: true,
+        message: "Post created successfully",
+        data: post,
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
+      res.status(400).send({
+        success: false,
+        message: "Failed to create post",
+        error: error.message, // Include the specific error message
+      });
+    }
+  }
+];

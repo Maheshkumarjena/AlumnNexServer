@@ -1,21 +1,18 @@
 import mongoose from 'mongoose';
-import Media from './Media.js';
-import User from './User.js';
 
 const postSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: mongoose.Schema.Types.ObjectId, // Must be a valid ObjectId
     required: true,
   },
   content: {
     type: String,
     required: true,
   },
-  media: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Media',
-  }],
+  media: {
+    type: [String], // Array of strings (URLs)
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -23,4 +20,5 @@ const postSchema = new mongoose.Schema({
 });
 
 const Post = mongoose.model('Post', postSchema);
+
 export default Post;
