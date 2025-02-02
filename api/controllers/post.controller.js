@@ -33,7 +33,6 @@ const cleanupFiles = (files) => {
 
 
 // Create a new post
-
 export const post = [
   authenticate,
   upload.array('files', 10),
@@ -41,7 +40,8 @@ export const post = [
     console.log('Request body at post route:', req.body);
     console.log('Uploaded files:', req.files);
 
-    const { content, _id: id } = req.body;
+    const content = req.body.content;
+    const id=req.body.id;
 
     // Validate request body
     if (!content || !id) {
@@ -52,6 +52,14 @@ export const post = [
     }
 
     try {
+      // Validate that the `id` is a valid 24-character hex string
+      if (!mongoose.Types.ObjectId.isValid(id)) { // <-- Added validation for ObjectId
+        return res.status(400).send({
+          success: false,
+          message: "Invalid user ID format",
+        });
+      }
+
       // Upload files to Cloudinary (if any)
       let mediaUrls = [];
       const files = req.files;
@@ -84,7 +92,7 @@ export const post = [
         message: "Post created successfully",
         data: post,
       });
-      console.log('post created successfully')
+      console.log('Post created successfully'); // <-- Fixed typo in log message
     } catch (error) {
       console.error("Error creating post:", error);
       res.status(400).send({
@@ -95,7 +103,6 @@ export const post = [
     }
   }
 ];
-
 
 // Get all posts for a user
 
