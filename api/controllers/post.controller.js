@@ -105,20 +105,34 @@ export const post = [
 ];
 
 // Get all posts for a user
-
+// Get all posts for a user
 export const getPosts = [authenticate, async (req, res) => {
-  console.log(req.body)
+  console.log(req.body);
   const { _id: userId } = req.body;
 
   try {
-    const posts = await Post.find({ userId }).sort({ createdAt: -1 });
+    const posts = await Post.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'userId',
+        select: '-password', // Exclude the password field
+      });
+
+    // Transform the response to change the key name from userId to user
+    const transformedPosts = posts.map(post => {
+      const { userId, ...rest } = post._doc;
+      return {
+        ...rest,
+        user: userId, // Assign userId to a new key 'user'
+      };
+    });
 
     res.status(200).send({
       success: true,
       message: "Posts retrieved successfully",
-      data: posts,
+      data: transformedPosts,
     });
-    console.log('post retrived and sent to client')
+    console.log('Posts retrieved and sent to client');
   } catch (error) {
     console.error("Error retrieving posts:", error);
     res.status(400).send({

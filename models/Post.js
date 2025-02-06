@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId, // Must be a valid ObjectId
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',  // Add reference to the User model
     required: true,
   },
   content: {
