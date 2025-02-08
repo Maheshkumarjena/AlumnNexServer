@@ -142,3 +142,32 @@ export const getPosts = [authenticate, async (req, res) => {
     });
   }
 }];
+
+
+export const deletePost = [authenticate, async (req, res) => {}];
+
+export const likePost = [authenticate, async (req, res) => {
+  console.log("like post triggered")
+  console.log("request . body at like post",req.body)
+  const { postId } = req.body;
+  const { _id: userId } = req.body;
+
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).send({
+        success: false,
+        message: "Post not found",
+      });
+    }
+    post.likes.push(userId);
+  }
+  catch (error) {
+    console.error("Error retrieving post:", error);
+    res.status(400).send({
+      success: false,
+      message: "Failed to retrieve post",
+      error: error.message,
+    });
+  }
+}];
