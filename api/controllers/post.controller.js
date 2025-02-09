@@ -275,3 +275,43 @@ export const commentPost = [authenticate, async (req, res) => {
     });
   }
 }];
+
+
+export const sharePost=[authenticate, async (req, res) => {
+  console.log(req.body)
+  try {
+    const { postId } = req.params;
+    const { userId } = req.body; // Ensure userId is sent from the frontend
+
+    // Find the post and increment the share count
+    const post = await Post.findByIdAndUpdate(
+      postId,
+      { $inc: { 'shares.0': 1 } }, // Increment the first element in the shares array
+      { new: true }
+    );
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.status(200).json({ shares: post.shares[0] });
+  } catch (error) {
+    console.error('Error in sharePost route:', error); // Log the error for debugging
+    res.status(500).json({ message: 'Something went wrong', error: error.message });
+  }
+}]
+
+export const getPostById=[authenticate, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong', error: error.message });
+  }
+}]

@@ -28,8 +28,8 @@ const postSchema = new mongoose.Schema({
   ],
   shares: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: Number,
+      default:0
     },
   ],
 }, { timestamps: true }); // ✅ Enables createdAt & updatedAt automatically
