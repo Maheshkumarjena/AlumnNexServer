@@ -204,51 +204,68 @@ export const likePost = [authenticate, async (req, res) => {
   }
 }];
 
-
 export const commentPost = [authenticate, async (req, res) => {
   console.log("comment post triggered");
   console.log("request.body at comment post", req.body);
 
-  const { userId, content } = req.body;
+  const { userId, content, parentCommentId } = req.body;
   const postId = req.params.id;
 
   console.log("userId at comment post", userId);
   console.log("comment at comment post", content);
   console.log("postId at comment post", postId);
+  console.log("parentCommentId at comment post", parentCommentId);
 
   try {
-    // 🔹 Check if the post exists
     const post = await Post.findById(postId);
     if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: "Post not found",
-      });
+      return res.status(404).json({ success: false, message: "Post not found" });
     }
 
-    // 🔹 Create a new comment in the Comment collection
     const newComment = new Comment({
       userId,
       postId,
-      content,  // 🛠 Ensure correct field names
+      content,
+      parentCommentId: parentCommentId || null,
     });
 
-    await newComment.save();  // Save comment in database
+    await newComment.save();
 
-    // 🔹 Push the new comment's ID to the post's comments array
-    post.comments.push(newComment._id);
-    await post.save(); // Save updated post
+    if (parentCommentId) {
+      const parentComment = await Comment.findById(parentCommentId);
+      if (parentComment) {
+        parentComment.replies.push(newComment._id);
+        await parentComment.save();
+      }
+    } else {
+      post.comments.push(newComment._id);
+      await post.save();
+    }
 
-    // 🔹 Populate comments and send response
-    const updatedPost = await Post.findById(postId).populate("comments");
+    const updatedPost = await Post.findById(postId)
+      .populate({
+        path: "comments",
+        populate: [
+          {
+            path: "userId",
+            select: "username profilePicture",
+          },
+          {
+            path: "replies",
+            populate: {
+              path: "userId",
+              select: "username profilePicture",
+            },
+          },
+        ],
+      });
 
-    console.log("comment added successfully")
+    console.log("comment added successfully");
     return res.status(200).json({
       success: true,
       message: "Comment added successfully",
-      comments: updatedPost.comments,  // 🔹 Send updated comments list
+      comments: updatedPost.comments,
     });
-
   } catch (error) {
     console.error("Error in commentPost:", error);
     return res.status(500).json({
@@ -258,4 +275,3 @@ export const commentPost = [authenticate, async (req, res) => {
     });
   }
 }];
-
