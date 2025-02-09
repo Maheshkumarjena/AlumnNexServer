@@ -1,4 +1,5 @@
 import Post from '../../models/Post.js';
+import Comment from '../../models/Comment.js';
 import { authenticate } from '../../middleware/auth.middleware.js';
 import { upload } from '../../middleware/multer.middleware.js';
 import uploadToCloudinary from '../utils/cloudinary.js';
@@ -116,14 +117,26 @@ export const getPosts = [authenticate, async (req, res) => {
       .populate({
         path: 'userId',
         select: '-password', // Exclude the password field
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'userId', // Populate the user who commented
+          select: 'username profilePicture ', // Fetch name & profile picture
+        },
       });
+
 
     // Transform the response to change the key name from userId to user
     const transformedPosts = posts.map(post => {
-      const { userId, ...rest } = post._doc;
+      const { userId, comments, ...rest } = post._doc;
       return {
         ...rest,
-        user: userId, // Assign userId to a new key 'user'
+        user: userId,
+comments: comments.map(comment => ({
+  ...comment._doc,
+  commentedUser: comment.userId, // Rename userId to user
+})),
       };
     });
 
@@ -147,27 +160,102 @@ export const getPosts = [authenticate, async (req, res) => {
 export const deletePost = [authenticate, async (req, res) => {}];
 
 export const likePost = [authenticate, async (req, res) => {
-  console.log("like post triggered")
-  console.log("request . body at like post",req.body)
-  const { postId } = req.body;
-  const { _id: userId } = req.body;
+  console.log("like post triggered");
+  console.log("request . body at like post", req.body);
+
+  const { postId, userId } = req.body;
 
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      return res.status(404).send({
+      return res.status(404).json({
         success: false,
         message: "Post not found",
       });
     }
+
+    console.log("userId at like post============>", userId);
+
+    // Check if userId is already in the likes array
+    if (post.likes.includes(userId)) {
+      console.log("You have already liked this post");
+      return res.status(400).json({
+        success: false,
+        message: "You have already liked this post",
+      });
+    }
+
+    // If not liked already, push userId to likes array
     post.likes.push(userId);
-  }
-  catch (error) {
+    await post.save(); // Ensure async save completes
+
+    return res.status(200).json({
+      success: true,
+      message: "Post liked successfully",
+      likes: post.likes.length,
+    });
+  } catch (error) {
     console.error("Error retrieving post:", error);
-    res.status(400).send({
+    return res.status(500).json({
       success: false,
-      message: "Failed to retrieve post",
+      message: "Internal Server Error",
       error: error.message,
     });
   }
 }];
+
+
+export const commentPost = [authenticate, async (req, res) => {
+  console.log("comment post triggered");
+  console.log("request.body at comment post", req.body);
+
+  const { userId, content } = req.body;
+  const postId = req.params.id;
+
+  console.log("userId at comment post", userId);
+  console.log("comment at comment post", content);
+  console.log("postId at comment post", postId);
+
+  try {
+    // 🔹 Check if the post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    // 🔹 Create a new comment in the Comment collection
+    const newComment = new Comment({
+      userId,
+      postId,
+      content,  // 🛠 Ensure correct field names
+    });
+
+    await newComment.save();  // Save comment in database
+
+    // 🔹 Push the new comment's ID to the post's comments array
+    post.comments.push(newComment._id);
+    await post.save(); // Save updated post
+
+    // 🔹 Populate comments and send response
+    const updatedPost = await Post.findById(postId).populate("comments");
+
+    console.log("comment added successfully")
+    return res.status(200).json({
+      success: true,
+      message: "Comment added successfully",
+      comments: updatedPost.comments,  // 🔹 Send updated comments list
+    });
+
+  } catch (error) {
+    console.error("Error in commentPost:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+}];
+
