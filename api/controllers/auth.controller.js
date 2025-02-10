@@ -63,8 +63,8 @@ export const signin = async (req, res, next) => {
 
         res.cookie('token', token, {
             httpOnly: true, // Prevent client-side access to the cookie
-            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'Strict', // Prevent CSRF attacks
+            secure: true, // Use secure cookies in production
+            sameSite: 'none', // Prevent CSRF attacks
             maxAge: 3600000, // 1 hour in milliseconds
         }).status(200).json({
             message: 'Sign In successful',
@@ -96,8 +96,8 @@ export const google = async (req, res, next) => {
             const expiresIn = Date.now() + 3600000;
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'Strict',
+                secure:true,
+                sameSite: 'none',
                 maxAge: 3600000,
             }).status(200).json({ message: 'Sign In successful', user: rest, expiresIn });
         } else {
@@ -126,7 +126,7 @@ export const google = async (req, res, next) => {
             const expiresIn = Date.now() + 3600000;
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: none,
                 sameSite: 'Strict',
                 maxAge: 3600000,
             }).status(200).json({ message: 'Sign In successful', user: { username: newUser.username, email: newUser.email, accountType: newUser.accountType, profilePicture: newUser.profilePicture }, expiresIn });
