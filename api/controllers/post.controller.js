@@ -107,7 +107,7 @@ export const post = [
 
 // Get all posts for a user
 // Get all posts for a user
-export const getPosts = [authenticate, async (req, res) => {
+export const getPosts = [ async (req, res) => {
   console.log(req.body);
   const { _id: userId } = req.body;
 
@@ -157,9 +157,9 @@ comments: comments.map(comment => ({
 }];
 
 
-export const deletePost = [authenticate, async (req, res) => {}];
+export const deletePost = [ async (req, res) => {}];
 
-export const likePost = [authenticate, async (req, res) => {
+export const likePost = [ async (req, res) => {
   console.log("like post triggered");
   console.log("request . body at like post", req.body);
 
@@ -204,7 +204,7 @@ export const likePost = [authenticate, async (req, res) => {
   }
 }];
 
-export const commentPost = [authenticate, async (req, res) => {
+export const commentPost = [ async (req, res) => {
   console.log("comment post triggered");
   console.log("request.body at comment post", req.body);
 
@@ -277,7 +277,7 @@ export const commentPost = [authenticate, async (req, res) => {
 }];
 
 
-export const sharePost=[authenticate, async (req, res) => {
+export const sharePost=[ async (req, res) => {
   console.log(req.body)
   try {
     const { postId } = req.params;
@@ -301,7 +301,7 @@ export const sharePost=[authenticate, async (req, res) => {
   }
 }]
 
-export const getPostById=[authenticate, async (req, res) => {
+export const getPostById=[ async (req, res) => {
   try {
     const { postId } = req.params;
     const post = await Post.findById(postId);
